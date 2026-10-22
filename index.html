@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkUp — Connect with Everyone</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0d1117;color:#f0f6fc;font-family:Arial,sans-serif}
+header{background:#161b22;padding:17px 6%;border-bottom:1px solid #30363d;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0}
+.logo{font-size:26px;font-weight:bold;color:#58a6ff}
+.logo span{color:white}
+button{cursor:pointer;border:0;border-radius:9px;padding:11px 16px;font-weight:bold}
+.primary{background:#238636;color:white}
+input,textarea{background:#0d1117;color:white;border:1px solid #30363d;border-radius:9px;padding:12px;width:100%;font:inherit}
+.layout{max-width:1100px;margin:28px auto;padding:0 16px;display:grid;grid-template-columns:220px minmax(0,600px);gap:24px}
+.panel,.post,.composer{background:#161b22;border:1px solid #30363d;border-radius:14px;padding:18px;margin-bottom:16px}
+nav button{display:block;background:transparent;color:#c9d1d9;text-align:left;width:100%;margin:5px 0;font-size:15px}
+nav button:hover{background:#21262d}
+h2{font-size:21px;margin-top:0}
+.muted{color:#8b949e;font-size:13px}
+.composer textarea{margin:12px 0;min-height:85px;resize:vertical}
+.post-head{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.avatar{width:42px;height:42px;border-radius:50%;background:#303f9f;display:grid;place-items:center;font-weight:bold}
+.post p{line-height:1.55;white-space:pre-wrap}
+.actions{display:flex;gap:10px;border-top:1px solid #30363d;padding-top:12px}
+.actions button{background:transparent;color:#c9d1d9}
+.actions button:hover{background:#21262d}
+#notice{color:#3fb950;font-size:13px;margin-top:8px}
+@media(max-width:650px){.layout{grid-template-columns:1fr}.sidebar{order:2}.feed{order:1}header{padding:15px}.sidebar .panel{padding:10px}nav{display:flex;flex-wrap:wrap}nav button{width:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🔗 Link<span>Up</span></div>
+  <button class="primary" onclick="document.getElementById('postText').focus()">＋ Create post</button>
+</header>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="panel">
+      <h2>Welcome to LinkUp 👋</h2>
+      <p class="muted">Your space to share, connect, and discover.</p>
+      <nav>
+        <button onclick="showAll()">🏠 Home feed</button>
+        <button onclick="document.getElementById('postText').focus()">✍️ Create a post</button>
+        <button onclick="showAbout()">ℹ️ About LinkUp</button>
+      </nav>
+    </div>
+    <div class="panel">
+      <h3>🌎 Your community</h3>
+      <p class="muted">Share what's happening in your world. Be respectful and keep it positive.</p>
+    </div>
+  </aside>
+  <main class="feed" id="feed">
+    <div class="composer">
+      <h2>What's on your mind?</h2>
+      <input id="author" maxlength="35" placeholder="Your display name (optional)">
+      <textarea id="postText" maxlength="1000" placeholder="Share something with LinkUp..."></textarea>
+      <button class="primary" onclick="createPost()">Publish post ↗</button>
+      <div id="notice"></div>
+    </div>
+    <div id="posts"></div>
+  </main>
+</div>
+<script>
+const starterPosts=[
+ {name:"LinkUp Team",text:"Welcome to LinkUp! 🎉 This is your community feed. Write a post above to get started.",time:"Welcome"},
+ {name:"Community",text:"What's one thing you're looking forward to this week? Drop it below! 💬",time:"Welcome"}
+];
+let posts=JSON.parse(localStorage.getItem("linkupPosts")||"null")||starterPosts;
+function escapeHTML(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function render(){
+ document.getElementById("posts").innerHTML=posts.map((p,i)=>`
+ <article class="post">
+ <div class="post-head"><div class="avatar">${escapeHTML((p.name||"U").slice(0,1).toUpperCase())}</div>
+ <div><strong>${escapeHTML(p.name||"Community member")}</strong><div class="muted">${escapeHTML(p.time||"Just now")}</div></div></div>
+ <p>${escapeHTML(p.text)}</p>
+ <div class="actions"><button onclick="likePost(${i})">♡ Like ${p.likes||0}</button><button onclick="commentPost(${i})">💬 Comment</button></div>
+ ${p.comments?.length?'<div class="muted">Comments: '+p.comments.map(c=>escapeHTML(c)).join(" · ")+'</div>':""}
+ </article>`).join("");
+}
+function save(){localStorage.setItem("linkupPosts",JSON.stringify(posts));render();}
+function createPost(){
+ const name=document.getElementById("author").value.trim()||"Community member";
+ const value=document.getElementById("postText").value.trim();
+ if(!value){document.getElementById("notice").textContent="Write something first.";return;}
+ posts.unshift({name,text:value,time:"Just now",likes:0,comments:[]});
+ save();document.getElementById("postText").value="";
+ document.getElementById("notice").textContent="Your post was added on this device!";
+}
+function likePost(i){posts[i].likes=(posts[i].likes||0)+1;save();}
+function commentPost(i){const c=prompt("Write your comment:");if(c&&c.trim()){posts[i].comments=posts[i].comments||[];posts[i].comments.push(c.trim().slice(0,300));save();}}
+function showAll(){render();document.getElementById("feed").scrollIntoView({behavior:"smooth"});}
+function showAbout(){alert("LinkUp is a social feed demo. Posts are saved in this browser on this device. Shared accounts and cross-device messaging need a server.");}
+render();
+</script>
+</body>
+</html>
